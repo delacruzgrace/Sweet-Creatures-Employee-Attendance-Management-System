@@ -27,11 +27,12 @@ h2 { font-size: 13px; line-height: 16px; }
 .app-shell { display: flex; min-height: 100vh; min-height: 100dvh; animation: fade-in .35s ease; }
 .sidebar { position: sticky; top: 0; align-self: flex-start; height: 100dvh; overflow-y: auto; flex: 0 0 190px; min-height: 640px; padding: 22px 12px; background: #3b2a20; color: #f1e8c7; animation: slide-right .45s var(--ease-out) backwards; }
 .sidebar-logo { display: block; width: 142px; height: auto; margin: 0 12px 25px; }
-.side-nav button, .logout { display: block; width: 100%; padding: 8px 10px; border: 0; border-radius: 4px; background: none; color: #f1e8c7; font-size: 12px; text-align: left; }
+.side-nav button, .logout { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border: 0; border-radius: 4px; background: none; color: #f1e8c7; font-size: 12px; text-align: left; }
 .side-nav .active { border-radius: 4px; background: #5c6a3b; color: #fffdf5; font-weight: 700; box-shadow: inset 3px 0 0 #b98a3e; }
 .nav-group { padding-top: 8px; border-top: 1px solid #bbbbbb80; }
 .nav-group p { padding: 0 10px 4px; color: #9ca764; font-size: 10.5px; }
 .logout { position: absolute; bottom: 15px; left: 12px; width: calc(100% - 24px); color: #9ca764; font-size: 11.5px; }
+.nav-icon { flex: none; width: 17px; height: 17px; }
 .side-nav button:not(.active):hover, .logout:hover { background: #f1e8c714; color: #fffdf5; }
 .workspace { flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 26px clamp(16px, 3vw, 44px); }
 .app-message { margin: 0 0 14px; padding: 9px 12px; border: 1px solid #9ca764; border-radius: 4px; background: #f1f3e7; color: #3b2a20; font-size: 12px; animation: slide-down .28s var(--ease-out) backwards; }
@@ -202,7 +203,7 @@ tbody tr:hover td { background: #faf3d6; }
   .side-nav { display: flex; flex-wrap: wrap; gap: 4px; }
   .nav-group { display: contents; }
   .nav-group p { display: none; }
-  .side-nav button { width: auto; padding: 8px 12px; background: #f1e8c714; }
+  .side-nav button { width: auto; padding: 8px 12px; gap: 8px; background: #f1e8c714; }
   .logout { position: static; width: auto; margin-top: 6px; }
   .workspace { padding: 20px 16px; }
   .summary-grid { grid-template-columns: repeat(2, 1fr); }
@@ -249,6 +250,8 @@ tbody tr:hover td { background: #faf3d6; }
   .sidebar { flex-basis: 230px; padding: 28px 16px; }
   .sidebar-logo { width: 170px; margin: 0 12px 30px; }
   .side-nav button, .logout { padding: 11px 12px; font-size: 14px; }
+  .side-nav button, .logout { gap: 12px; }
+  .nav-icon { width: 20px; height: 20px; }
   .nav-group { padding-top: 10px; }
   .nav-group p { font-size: 12px; padding-bottom: 6px; }
   .logout { font-size: 13px; }
