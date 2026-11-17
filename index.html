@@ -79,9 +79,22 @@
 
       <section class="page" id="cash" data-node-id="1:679" hidden>
         <header class="page-header"><h1>Cash Advance</h1></header>
+        <div class="cash-summary">
+          <article class="summary-card"><p>Active Advances</p><strong id="cash-active-count">0</strong></article>
+          <article class="summary-card"><p>Pending Approval</p><strong id="cash-pending-count">0</strong></article>
+          <article class="summary-card"><p>Total Outstanding</p><strong id="cash-outstanding-total">&#8369;0.00</strong></article>
+        </div>
         <div class="cash-layout"><form class="form-card cash-card" id="cash-form"><h2>Record Cash Advance</h2>
-          <label class="field">Staff<select name="staffName" required id="cash-staff"></select></label><label class="field">Amount<input name="amount" type="number" min="0.01" step="0.01" required><span class="field-note" id="cash-advance-limit">Max PHP 1,640.00 (50% of projected net pay)</span></label><label class="field">Date Granted<input name="dateGranted" type="date" required></label><label class="field">Deduct on Cutoff<select name="cutoff" required id="cash-cutoff"><option value="2026-11-01|2026-11-15">Nov 1 - Nov 15, 2026</option><option value="2026-11-16|2026-11-30">Nov 16 - Nov 30, 2026</option></select></label><label class="field">Notes (optional)<input name="notes" placeholder="Reason for advance"></label><button class="primary-button form-submit" type="submit">Save</button>
-        </form><div class="table-wrap"><table class="cash-table"><thead><tr><th>Staff</th><th>Amount</th><th>Date</th><th>Deduct on Cutoff</th><th>Notes</th><th>Status</th><th>Actions</th></tr></thead><tbody id="cash-rows"></tbody></table></div></div>
+          <label class="field">Staff<select name="staffName" required id="cash-staff"></select></label><label class="field">Amount<input name="amount" type="number" min="0.01" step="0.01" placeholder="Input" required><span class="field-note" id="cash-advance-limit">Max PHP 1,640.00 (50% net)</span></label><label class="field">Date Granted<input name="dateGranted" type="date" required></label><label class="field">Deduct on Cutoff<select name="cutoff" required id="cash-cutoff"><option value="2026-11-01|2026-11-15">Nov 1 - Nov 15, 2026</option><option value="2026-11-16|2026-11-30">Nov 16 - Nov 30, 2026</option></select></label><label class="field">Notes <span class="optional">(Optional)</span><input name="notes" placeholder="Reason for advance"></label><button class="primary-button form-submit" type="submit">Save</button>
+        </form>
+        <div class="form-card cash-panel">
+          <div class="cash-toolbar">
+            <label class="search-field"><svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14"/></svg><input type="search" id="cash-search" placeholder="Search Staff..." aria-label="Search staff" autocomplete="off"></label>
+            <div class="filters segmented" data-filter-group="cash"><button class="filter active" type="button" data-filter="all">All</button><button class="filter" type="button" data-filter="Pending">Pending</button><button class="filter" type="button" data-filter="Approved">Approved</button><button class="filter" type="button" data-filter="Deducted">Deducted</button></div>
+          </div>
+          <div class="table-wrap"><table class="cash-table"><thead><tr><th>Staff</th><th>Amount</th><th>Date</th><th>Deduct on Cutoff</th><th>Notes</th><th>Status</th><th>Actions</th></tr></thead><tbody id="cash-rows"></tbody></table></div>
+          <p class="cash-empty" id="cash-empty" hidden>No cash advances match your search or filter.</p>
+        </div></div>
       </section>
 
       <section class="page" id="payroll" data-node-id="1:496" hidden>
@@ -107,5 +120,6 @@
   <dialog class="modal review-modal" id="review-dialog" data-node-id="1:306"><form id="review-form" method="dialog" novalidate><h2>Review flagged attendance</h2><p class="modal-description"></p><div class="field-grid modal-fields"><label class="field">Corrected Time In<input name="timeIn" type="time"></label><label class="field">Corrected Time Out<input name="timeOut" type="time"></label></div><label class="field remarks-field">Remarks (required)<textarea name="remarks" required></textarea><span class="field-note">Decision details are saved with the record in this browser.</span></label><div class="modal-actions"><button class="outline-button" value="cancel" formnovalidate>Cancel</button><button class="outline-button" value="reject">Reject</button><button class="primary-button" value="approve">Approve</button></div></form></dialog>
   <dialog class="modal payslip-modal" id="payslip-dialog" aria-labelledby="payslip-title"><h2 id="payslip-title">Payslip</h2><p class="modal-description" id="payslip-description"></p><div class="table-wrap"><table><tbody id="payslip-details"></tbody></table></div><div class="modal-actions"><button class="outline-button" type="button" data-close-dialog>Close</button><button class="primary-button" type="button" id="print-payslip">Print payslip</button></div></dialog>
   <dialog class="modal" id="photo-dialog" aria-labelledby="photo-title"><h2 id="photo-title">Attendance photo</h2><p id="photo-message" class="modal-description">Photos are stored in this browser only.</p><img id="photo-preview" class="photo-preview" alt="Selected attendance evidence" hidden><form id="photo-form"><label class="field">Choose an image<input name="photo" type="file" accept="image/*" required></label><div class="modal-actions"><button class="outline-button" type="button" data-close-dialog>Close</button><button class="primary-button" type="submit">Save photo</button></div></form></dialog>
+  <div class="row-menu-popover" id="cash-menu" role="menu" hidden></div>
 </body>
 </html>
