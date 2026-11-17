@@ -151,6 +151,9 @@ function escapeHtml(value) {
 function formatAmount(value) {
   return Number(value).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
+function formatPeso(value) {
+  return `₱${formatAmount(value)}`;
+}
 function formatDate(value) {
   const date = new Date(`${value}T00:00:00`);
   return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -163,8 +166,15 @@ function toDateInput(value) {
 function applyFilter(group) {
   const selected = group.querySelector('.filter.active');
   if (!selected) return;
+  const isCash = group.dataset.filterGroup === 'cash';
+  const search = isCash ? document.querySelector('#cash-search').value.trim().toLowerCase() : '';
   const rows = document.querySelectorAll(`#${group.dataset.filterGroup}-rows tr`);
-  rows.forEach(row => { row.hidden = selected.dataset.filter !== 'all' && row.dataset.status !== selected.dataset.filter; });
+  rows.forEach(row => {
+    const matchesStatus = selected.dataset.filter === 'all' || row.dataset.status === selected.dataset.filter;
+    const matchesSearch = !search || (row.dataset.search || '').includes(search);
+    row.hidden = !(matchesStatus && matchesSearch);
+  });
+  if (isCash) document.querySelector('#cash-empty').hidden = Array.from(rows).some(row => !row.hidden);
 }
 function renderAttendance() {
   document.querySelector('#attendance-rows').innerHTML = attendance.map(([name, time, status]) => {
@@ -190,11 +200,42 @@ function renderFlagged() {
   applyFilter(document.querySelector('[data-filter-group="flagged"]'));
 }
 function renderCashAdvances() {
+  closeCashMenu();
+  const open = data.cashAdvances.filter(entry => ['Pending', 'Approved'].includes(entry.status));
+  document.querySelector('#cash-active-count').textContent = open.length;
+  document.querySelector('#cash-pending-count').textContent = data.cashAdvances.filter(entry => entry.status === 'Pending').length;
+  document.querySelector('#cash-outstanding-total').textContent = formatPeso(open.reduce((total, entry) => total + Number(entry.amount), 0));
   document.querySelector('#cash-rows').innerHTML = data.cashAdvances.map(entry => {
     const badge = entry.status === 'Approved' ? 'green' : entry.status === 'Deducted' ? 'dark' : entry.status === 'Rejected' ? 'red' : 'gold';
     const date = entry.dateGranted.includes('-') ? formatDate(entry.dateGranted) : entry.dateGranted;
-    return `<tr data-id="${escapeHtml(entry.id)}"><td>${escapeHtml(entry.staffName)}</td><td>${formatAmount(entry.amount)}</td><td>${escapeHtml(date)}</td><td>${escapeHtml(cutoffLabel(entry.cutoff))}</td><td>${escapeHtml(entry.notes)}</td><td><span class="badge badge-${badge}">${escapeHtml(entry.status)}</span></td><td>${entry.status === 'Pending' ? `<button class="action-button" data-cash-action="Approved" data-id="${escapeHtml(entry.id)}">Approve</button> | <button class="action-button" data-cash-action="Rejected" data-id="${escapeHtml(entry.id)}">Reject</button>` : '--'}</td></tr>`;
+    const id = escapeHtml(entry.id);
+    return `<tr data-id="${id}" data-status="${escapeHtml(entry.status)}" data-search="${escapeHtml(entry.staffName.toLowerCase())}"><td>${escapeHtml(entry.staffName)}</td><td>${formatPeso(entry.amount)}</td><td>${escapeHtml(date)}</td><td>${escapeHtml(cutoffLabel(entry.cutoff))}</td><td>${entry.notes ? escapeHtml(entry.notes) : '\u2014'}</td><td><span class="badge badge-${badge}">${escapeHtml(entry.status)}</span></td><td><button class="kebab" type="button" data-menu-toggle data-id="${id}" aria-haspopup="menu" aria-expanded="false" aria-label="Actions for ${escapeHtml(entry.staffName)}"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="currentColor"><circle cx="3" cy="8" r="1.4"/><circle cx="8" cy="8" r="1.4"/><circle cx="13" cy="8" r="1.4"/></svg></button></td></tr>`;
   }).join('');
+  applyFilter(document.querySelector('[data-filter-group="cash"]'));
+}
+function closeCashMenu() {
+  const menu = document.querySelector('#cash-menu');
+  if (!menu || menu.hidden) return;
+  menu.hidden = true;
+  document.querySelectorAll('[data-menu-toggle][aria-expanded="true"]').forEach(button => button.setAttribute('aria-expanded', 'false'));
+}
+function openCashMenu(button) {
+  const menu = document.querySelector('#cash-menu');
+  const entry = data.cashAdvances.find(item => item.id === button.dataset.id);
+  if (!entry) return;
+  const id = escapeHtml(entry.id);
+  menu.innerHTML = entry.status === 'Pending'
+    ? `<button class="menu-item" type="button" role="menuitem" data-cash-action="Approved" data-id="${id}">Approve</button><button class="menu-item" type="button" role="menuitem" data-cash-action="Rejected" data-id="${id}">Reject</button>`
+    : '<p class="menu-empty">No actions available</p>';
+  menu.hidden = false;
+  button.setAttribute('aria-expanded', 'true');
+  const anchor = button.getBoundingClientRect();
+  const box = menu.getBoundingClientRect();
+  const left = Math.max(8, Math.min(anchor.right - box.width, window.innerWidth - box.width - 8));
+  const below = anchor.bottom + 4;
+  const top = below + box.height > window.innerHeight - 8 ? Math.max(8, anchor.top - box.height - 4) : below;
+  menu.style.left = `${left}px`;
+  menu.style.top = `${top}px`;
 }
 function cutoffLabel(value) {
   const known = PAYROLL_CUTOFFS.find(cutoff => cutoff.value === normalizeCutoff(value));
@@ -237,7 +278,7 @@ function updateCashAdvanceLimit() {
   const maximum = person ? availableCashAdvanceLimit(person, cutoff) : 0;
   const amount = document.querySelector('#cash-form').elements.amount;
   amount.max = maximum.toFixed(2);
-  document.querySelector('#cash-advance-limit').textContent = `Max PHP 1,640.00 (50% of projected net pay; PHP ${formatAmount(maximum)} available for this cutoff)`;
+  document.querySelector('#cash-advance-limit').textContent = `Max PHP 1,640.00 (50% net); PHP ${formatAmount(maximum)} available`;
 }
 function renderPolicies() {
   const now = new Date();
@@ -786,6 +827,20 @@ document.querySelector('#cash-form').addEventListener('submit', event => {
   renderCashStaffOptions();
   notify('Cash advance saved in this browser as pending.');
 });
+document.querySelector('#cash-search').addEventListener('input', () => applyFilter(document.querySelector('[data-filter-group="cash"]')));
+document.addEventListener('click', event => {
+  const toggle = event.target.closest('[data-menu-toggle]');
+  if (toggle) {
+    const wasOpen = toggle.getAttribute('aria-expanded') === 'true';
+    closeCashMenu();
+    if (!wasOpen) openCashMenu(toggle);
+    return;
+  }
+  if (!document.querySelector('#cash-menu').contains(event.target)) closeCashMenu();
+});
+document.addEventListener('keydown', event => { if (event.key === 'Escape') closeCashMenu(); });
+window.addEventListener('resize', closeCashMenu);
+window.addEventListener('scroll', closeCashMenu, true);
 document.querySelector('#cash-staff').addEventListener('change', updateCashAdvanceLimit);
 document.querySelector('#cash-cutoff').addEventListener('change', updateCashAdvanceLimit);
 
