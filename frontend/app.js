@@ -1,6 +1,7 @@
 const STORAGE_KEY = 'sweet-creatures-attendance-data-v1';
 
 app.use('/api/attendance', require('./routes/attendanceRoutes'));
+app.use('/api/payroll', require('./routes/payrollRoutes'));
 
 const attendance = [
   ['Maria Santos', '08:02', 'OnTime'], ['Jun Reyes', '08:20', 'Late'], ['Ana Cruz', '--', 'Flagged'],
