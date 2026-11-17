@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const db = require('./config/db');
+const employeeRoutes = require('./routes/employeeRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -35,6 +36,7 @@ const authRoutes = require('./routes/authRoutes');
 
 app.use(express.json());
 app.use('/api/auth', authRoutes);
+app.use('/api/employees', employeeRoutes);
 
 // Start Server
 app.listen(PORT, () => {
