@@ -223,6 +223,15 @@ CREATE TABLE `user` (
   UNIQUE KEY `uq_user_email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Default development administrator
+--
+
+INSERT IGNORE INTO `user`
+  (`account_role`, `first_name`, `last_name`, `username`, `email`, `pin_hash`)
+VALUES
+  ('Admin', 'Admin', 'User', 'lysa', 'lysa@example.com', '$2b$10$bbxqb5bZLCatbVi/tpdi0eGBsV8XfQ.EsaRLMtOfAt94OUZPvKaIe');
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
