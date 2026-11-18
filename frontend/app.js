@@ -1,7 +1,7 @@
 const STORAGE_KEY = 'sweet-creatures-attendance-data-v1';
-
-app.use('/api/attendance', require('./routes/attendanceRoutes'));
-app.use('/api/payroll', require('./routes/payrollRoutes'));
+const API_BASE_URL = '/api';
+const TOKEN_KEY = 'sweet-creatures-session-token';
+let apiStaff = [];
 
 const attendance = [
   ['Maria Santos', '08:02', 'OnTime'], ['Jun Reyes', '08:20', 'Late'], ['Ana Cruz', '--', 'Flagged'],
@@ -68,6 +68,61 @@ function notify(text, isError = false) {
   message.hidden = false;
   window.clearTimeout(notify.timeout);
   notify.timeout = window.setTimeout(() => { message.hidden = true; }, 6000);
+}
+
+async function apiRequest(path, { method = 'GET', body } = {}) {
+  const headers = { Accept: 'application/json' };
+  const token = sessionStorage.getItem(TOKEN_KEY);
+  if (token) headers.Authorization = `Bearer ${token}`;
+  if (body !== undefined) headers['Content-Type'] = 'application/json';
+
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      method,
+      headers,
+      ...(body === undefined ? {} : { body: JSON.stringify(body) })
+    });
+  } catch {
+    throw new Error('Could not reach the backend. Make sure it is running.');
+  }
+
+  const responseText = await response.text();
+  let result = {};
+  if (responseText) {
+    try {
+      result = JSON.parse(responseText);
+    } catch {
+      throw new Error('The backend returned an unreadable response.');
+    }
+  }
+  if (!response.ok) {
+    throw new Error(result.message || `Request failed (${response.status}).`);
+  }
+  return result;
+}
+
+function mapEmployee(employee) {
+  return {
+    id: String(employee.user_id),
+    name: [employee.first_name, employee.middle_name, employee.last_name].filter(Boolean).join(' '),
+    username: employee.username,
+    role: employee.account_role,
+    position: employee.job_position || '',
+    rate: employee.hourly_rate ?? 0,
+    hired: employee.created_at ? String(employee.created_at).slice(0, 10) : '',
+    email: employee.email,
+    status: employee.account_status
+  };
+}
+
+async function loadEmployees() {
+  const result = await apiRequest('/employees');
+  if (!Array.isArray(result.rows)) {
+    throw new Error('The backend returned an invalid employee list.');
+  }
+  apiStaff = result.rows.map(mapEmployee);
+  renderStaff();
 }
 
 function readData() {
@@ -190,9 +245,11 @@ function renderAttendance() {
   }).join('');
 }
 function renderStaff() {
-  document.querySelector('#staff-rows').innerHTML = data.staff.map(person =>
-    `<tr data-id="${escapeHtml(person.id)}" data-status="${escapeHtml(person.status)}"><td>${escapeHtml(person.name)}</td><td>${escapeHtml(person.role)}</td><td>${escapeHtml(person.position)}</td><td>PHP ${formatAmount(person.rate)}</td><td>${escapeHtml(person.hired)}</td><td>${escapeHtml(person.contact)}</td><td><span class="badge badge-${badgeClass[person.status] || 'neutral'}">${escapeHtml(person.status)}</span></td><td class="staff-actions"><button class="action-button" data-staff-action="edit">Edit</button>${person.status === 'Inactive' ? '<button class="action-button" data-staff-action="reactivate">Reactivate</button>' : person.status === 'Locked' ? '<button class="action-button" data-staff-action="unlock">Unlock</button>' : '<button class="action-button" data-staff-action="reset-pin">Reset PIN</button><button class="action-button" data-staff-action="deactivate">Deactivate</button>'}</td></tr>`
-  ).join('');
+  document.querySelector('#staff-rows').innerHTML = apiStaff.length
+    ? apiStaff.map(person =>
+      `<tr data-id="${escapeHtml(person.id)}" data-status="${escapeHtml(person.status)}"><td>${escapeHtml(person.name)}</td><td>${escapeHtml(person.username)}</td><td>${escapeHtml(person.role)}</td><td>${escapeHtml(person.position)}</td><td>PHP ${formatAmount(person.rate)}</td><td>${escapeHtml(person.hired)}</td><td>${escapeHtml(person.email)}</td><td><span class="badge badge-${badgeClass[person.status] || 'neutral'}">${escapeHtml(person.status)}</span></td></tr>`
+    ).join('')
+    : '<tr><td colspan="8">No employee accounts found.</td></tr>';
   applyFilter(document.querySelector('[data-filter-group="staff"]'));
 }
 function renderFlagged() {
@@ -541,13 +598,39 @@ function showPage(page) {
   document.querySelectorAll('.page').forEach(section => { section.hidden = section.id !== page; });
   document.querySelectorAll('.nav-link').forEach(button => button.classList.toggle('active', button.dataset.page === (page === 'policy' ? 'flagged' : page)));
 }
-document.querySelector('#login-form').addEventListener('submit', event => {
+document.querySelector('#login-form').addEventListener('submit', async event => {
   event.preventDefault();
-  document.querySelector('#login').hidden = true;
-  document.querySelector('#app').hidden = false;
-  showPage('dashboard');
+  const form = event.currentTarget;
+  const submitButton = form.querySelector('[type="submit"]');
+  const loginError = document.querySelector('#login-error');
+  const values = new FormData(form);
+  loginError.hidden = true;
+  submitButton.disabled = true;
+  try {
+    const result = await apiRequest('/auth/login', {
+      method: 'POST',
+      body: { username: values.get('username'), pin: values.get('pin') }
+    });
+    if (typeof result.token !== 'string' || !result.token) {
+      throw new Error('The backend did not return a session token.');
+    }
+    sessionStorage.setItem(TOKEN_KEY, result.token);
+    await loadEmployees();
+    document.querySelector('#login').hidden = true;
+    document.querySelector('#app').hidden = false;
+    showPage('dashboard');
+  } catch (error) {
+    sessionStorage.removeItem(TOKEN_KEY);
+    loginError.textContent = error.message;
+    loginError.hidden = false;
+  } finally {
+    submitButton.disabled = false;
+  }
 });
 document.querySelector('#logout').addEventListener('click', () => {
+  sessionStorage.removeItem(TOKEN_KEY);
+  apiStaff = [];
+  renderStaff();
   document.querySelector('#app').hidden = true;
   document.querySelector('#login').hidden = false;
 });
@@ -682,56 +765,65 @@ document.addEventListener('click', event => {
   }
 });
 
-document.querySelector('#staff-form').addEventListener('submit', event => {
+document.querySelector('#staff-form').addEventListener('submit', async event => {
   if (event.submitter?.value !== 'save') return;
   event.preventDefault();
   const form = event.currentTarget;
   const values = new FormData(form);
-  const existing = data.staff.find(person => person.id === form.closest('dialog').dataset.recordId);
-  const person = existing || { id: makeId(), status: 'Active' };
-  const previous = existing ? { ...existing } : null;
-  const rate = Number(values.get('rate')).toFixed(2);
-  const rateEffectiveDate = values.get('rateEffectiveDate');
-  const rateHistory = existing?.rateHistory
-    ? [...existing.rateHistory]
-    : existing
-      ? [{ rate: existing.rate, effectiveDate: existing.rateEffectiveDate || toDateInput(existing.hired) }]
-      : [];
-  if (!existing || rate !== existing.rate) {
-    person.rateHistory = [
-      ...rateHistory.filter(item => item.effectiveDate !== rateEffectiveDate),
-      { rate, effectiveDate: rateEffectiveDate }
-    ];
-  } else {
-    person.rateHistory = rateHistory;
+  const nameParts = String(values.get('name')).trim().split(/\s+/).filter(Boolean);
+  if (nameParts.length < 2) {
+    notify('Enter both a first and last name.', true);
+    return;
   }
-  Object.assign(person, {
-    name: values.get('name').trim(),
-    role: values.get('role').trim(),
-    position: values.get('position').trim(),
-    rate,
-    hired: formatDate(values.get('dateHired')),
-    rateEffectiveDate,
-    contact: values.get('contact').trim()
-  });
-  if (!existing) data.staff.push(person);
-  if (!persist()) {
-    if (existing) Object.assign(existing, previous);
-    else data.staff.pop();
+  const firstName = nameParts.shift();
+  const lastName = nameParts.pop();
+  const middleName = nameParts.join(' ');
+  try {
+    await apiRequest('/employees', {
+      method: 'POST',
+      body: {
+        firstName,
+        middleName,
+        lastName,
+        username: values.get('username'),
+        email: values.get('email'),
+        pin: values.get('pin'),
+        role: values.get('role'),
+        jobPosition: values.get('position'),
+        hourlyRate: Number(values.get('rate'))
+      }
+    });
+  } catch (error) {
+    notify(`Could not create employee: ${error.message}`, true);
     return;
   }
   form.reset();
   form.elements.role.value = 'Staff';
-  form.elements.pin.required = true;
-  document.querySelector('#staff-pin-field').hidden = false;
-  form.querySelector('h2').textContent = 'Add Staff';
-  form.querySelector('[value="save"]').textContent = 'Save Staff';
-  delete form.closest('dialog').dataset.recordId;
   form.closest('dialog').close('save');
-  renderStaff();
-  renderCashStaffOptions();
-  notify(existing ? 'Staff details saved in this browser.' : 'Staff member saved in this browser. The PIN was not saved.');
+  try {
+    await loadEmployees();
+  } catch (error) {
+    notify(`Employee was created, but the list could not be refreshed: ${error.message}`, true);
+    return;
+  }
+  notify('Employee account saved to the database.');
 });
+
+async function restoreSession() {
+  if (!sessionStorage.getItem(TOKEN_KEY)) return;
+  const loginError = document.querySelector('#login-error');
+  try {
+    await apiRequest('/auth/me');
+    await loadEmployees();
+    document.querySelector('#login').hidden = true;
+    document.querySelector('#app').hidden = false;
+  } catch (error) {
+    sessionStorage.removeItem(TOKEN_KEY);
+    loginError.textContent = `Your session could not be restored: ${error.message}`;
+    loginError.hidden = false;
+  }
+}
+restoreSession();
 
 document.querySelector('#photo-form').addEventListener('submit', async event => {
   event.preventDefault();

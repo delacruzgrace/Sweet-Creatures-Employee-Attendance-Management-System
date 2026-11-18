@@ -1,8 +1,10 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
 const db = require('./config/db');
 const employeeRoutes = require('./routes/employeeRoutes');
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -28,15 +30,9 @@ app.get('/api/test-db', async (req, res) => {
     }
 });
 
-app.get('/', (req, res) => {
-    res.json({ message: 'Sweet Creatures Employee Attendance API is running!' });
-});
-
-const authRoutes = require('./routes/authRoutes');
-
-app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/employees', employeeRoutes);
+app.use(express.static(path.resolve(__dirname, '../../frontend')));
 
 // Start Server
 app.listen(PORT, () => {
