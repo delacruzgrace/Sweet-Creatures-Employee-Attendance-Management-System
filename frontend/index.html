@@ -38,14 +38,14 @@
       <p id="app-message" class="app-message" role="status" aria-live="polite" hidden></p>
       <p class="storage-notice">Login and staff accounts use the backend. Attendance, payroll, advances, policies, and SOP are still prototype data stored in this browser.</p>
       <section class="page" id="dashboard" data-node-id="1:85">
-        <header class="page-header"><h1>Dashboard</h1><span class="muted">Today, Nov 8</span></header>
+        <header class="page-header"><h1>Dashboard</h1><span class="muted" id="today"></span></header>
         <div class="summary-grid">
           <article class="summary-card"><p>Present Today</p><strong>7 / 10</strong></article>
           <article class="summary-card"><p>Flagged Entries</p><strong>3</strong><button class="subtle-link" data-go="flagged">Review now</button></article>
           <article class="summary-card"><p>Pending Cash Advances</p><strong>2</strong><button class="subtle-link" data-go="cash">Review now</button></article>
           <article class="summary-card"><p>Next Cutoff</p><strong>Nov 15</strong></article>
         </div>
-        <h2 class="section-title">Today's attendance</h2>
+        <h2 class="section-title">Today's Attendance</h2>
         <div class="filters" data-filter-group="attendance"><button class="filter active" data-filter="all">All 10</button><button class="filter" data-filter="Late">Late 2</button><button class="filter" data-filter="Flagged">Flagged 1</button><button class="filter" data-filter="Absent">Absent 2</button></div>
         <div class="table-wrap"><table class="attendance-table"><thead><tr><th>Staff</th><th>Time In</th><th>Time Out</th><th>Hours</th><th>Status</th><th>Photo</th></tr></thead><tbody id="attendance-rows"></tbody></table></div>
       </section>
