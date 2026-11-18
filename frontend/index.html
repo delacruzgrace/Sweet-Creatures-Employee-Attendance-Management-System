@@ -14,9 +14,9 @@
       <h1 id="login-title">Admin</h1>
       <p class="login-subtitle">Attendance and Payroll System</p>
       <form id="login-form">
-        <label class="field">Username<input name="username" value="admin.owner" autocomplete="username"></label>
-        <label class="field">PIN<span class="pin-control"><input id="pin" name="pin" type="password" value="123456" autocomplete="current-password"><button class="text-button" type="button" id="show-pin">Show</button></span></label>
-        <div class="login-error">Incorrect username or PIN.<br>2 attempts left before the account locks.</div>
+        <label class="field">Username<input name="username" autocomplete="username" required></label>
+        <label class="field">PIN<span class="pin-control"><input id="pin" name="pin" type="password" autocomplete="current-password" required><button class="text-button" type="button" id="show-pin">Show</button></span></label>
+        <div class="login-error" id="login-error" role="alert" hidden></div>
         <button class="primary-button login-submit" type="submit">Log In</button>
       </form>
       <p class="login-help">Forgot PIN? Ask the owner to reset it.</p>
@@ -36,7 +36,7 @@
     </aside>
     <main class="workspace">
       <p id="app-message" class="app-message" role="status" aria-live="polite" hidden></p>
-      <p class="storage-notice">Prototype only: data stays in this browser and is not secure or shared across devices. Do not enter real employee, PIN, or payroll information.</p>
+      <p class="storage-notice">Login and staff accounts use the backend. Attendance, payroll, advances, policies, and SOP are still prototype data stored in this browser.</p>
       <section class="page" id="dashboard" data-node-id="1:85">
         <header class="page-header"><h1>Dashboard</h1><span class="muted">Today, Nov 8</span></header>
         <div class="summary-grid">
@@ -52,9 +52,9 @@
 
       <section class="page" id="staff" data-node-id="1:857" hidden>
         <header class="page-header"><h1>Staff Management</h1><button class="primary-button" data-open="staff-dialog">+ Add Staff</button></header>
-        <div class="filters" data-filter-group="staff"><button class="filter active" data-filter="all">All</button><button class="filter" data-filter="Active">Active</button><button class="filter" data-filter="Locked">Locked</button><button class="filter" data-filter="Inactive">Inactive</button></div>
-        <div class="table-wrap"><table class="staff-table"><thead><tr><th>Name</th><th>Role</th><th>Position</th><th>Hourly rate</th><th>Date hired</th><th>Contact</th><th>Status</th><th>Actions</th></tr></thead><tbody id="staff-rows"></tbody></table></div>
-        <p class="caption">Rate changes are saved with an effective date, so past payslips keep the rate used at the time.</p>
+        <div class="filters" data-filter-group="staff"><button class="filter active" data-filter="all">All</button><button class="filter" data-filter="Active">Active</button><button class="filter" data-filter="Locked">Locked</button></div>
+        <div class="table-wrap"><table class="staff-table"><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Position</th><th>Hourly rate</th><th>Created</th><th>Email</th><th>Status</th></tr></thead><tbody id="staff-rows"></tbody></table></div>
+        <p class="caption">Employee accounts are loaded from the backend database.</p>
       </section>
 
       <section class="page" id="flagged" data-node-id="1:603" hidden>
@@ -116,7 +116,7 @@
     </main>
   </div>
 
-  <dialog class="modal" id="staff-dialog" data-node-id="1:454"><form id="staff-form" method="dialog"><h2>Add Staff</h2><p class="modal-description">The staff member uses the PIN to Time In and Time Out.</p><div class="field-grid modal-fields"><label class="field">Full name<input name="name" placeholder="Full name" required></label><label class="field">Contact number<input name="contact" placeholder="09XX XXX XXXX" required></label><label class="field">Role<input name="role" value="Staff" required></label><label class="field">Position<input name="position" placeholder="Select position" required></label><label class="field">Hourly rate (PHP)<input name="rate" type="number" min="0.01" step="0.01" placeholder="0.00" required></label><label class="field">Rate effective date<input name="rateEffectiveDate" type="date" required></label><label class="field">Date hired<input name="dateHired" type="date" required></label><label class="field" id="staff-pin-field">Initial PIN<input name="pin" type="password" inputmode="numeric" pattern="[0-9]{4,6}" minlength="4" maxlength="6" placeholder="4 to 6 digits" required><span class="field-note">Demo only: PINs are not saved to browser storage.</span></label></div><div class="modal-actions"><button class="outline-button" value="cancel" formnovalidate>Cancel</button><button class="primary-button" value="save">Save Staff</button></div></form></dialog>
+  <dialog class="modal" id="staff-dialog" data-node-id="1:454"><form id="staff-form" method="dialog"><h2>Add Staff</h2><p class="modal-description">The PIN is securely hashed by the backend before storage.</p><div class="field-grid modal-fields"><label class="field">Full name<input name="name" placeholder="First and last name" required></label><label class="field">Username<input name="username" autocomplete="off" required></label><label class="field">Email<input name="email" type="email" autocomplete="off" required></label><label class="field">Role<input name="role" value="Staff" required></label><label class="field">Position<input name="position" placeholder="Position" required></label><label class="field">Hourly rate (PHP)<input name="rate" type="number" min="0.01" step="0.01" placeholder="0.00" required></label><label class="field" id="staff-pin-field">Initial PIN<input name="pin" type="password" inputmode="numeric" pattern="[0-9]{4,6}" minlength="4" maxlength="6" placeholder="4 to 6 digits" required><span class="field-note">PINs are never stored in the browser.</span></label></div><div class="modal-actions"><button class="outline-button" value="cancel" formnovalidate>Cancel</button><button class="primary-button" value="save">Save Staff</button></div></form></dialog>
   <dialog class="modal review-modal" id="review-dialog" data-node-id="1:306"><form id="review-form" method="dialog" novalidate><h2>Review flagged attendance</h2><p class="modal-description"></p><div class="field-grid modal-fields"><label class="field">Corrected Time In<input name="timeIn" type="time"></label><label class="field">Corrected Time Out<input name="timeOut" type="time"></label></div><label class="field remarks-field">Remarks (required)<textarea name="remarks" required></textarea><span class="field-note">Decision details are saved with the record in this browser.</span></label><div class="modal-actions"><button class="outline-button" value="cancel" formnovalidate>Cancel</button><button class="outline-button" value="reject">Reject</button><button class="primary-button" value="approve">Approve</button></div></form></dialog>
   <dialog class="modal payslip-modal" id="payslip-dialog" aria-labelledby="payslip-title"><h2 id="payslip-title">Payslip</h2><p class="modal-description" id="payslip-description"></p><div class="table-wrap"><table><tbody id="payslip-details"></tbody></table></div><div class="modal-actions"><button class="outline-button" type="button" data-close-dialog>Close</button><button class="primary-button" type="button" id="print-payslip">Print payslip</button></div></dialog>
   <dialog class="modal" id="photo-dialog" aria-labelledby="photo-title"><h2 id="photo-title">Attendance photo</h2><p id="photo-message" class="modal-description">Photos are stored in this browser only.</p><img id="photo-preview" class="photo-preview" alt="Selected attendance evidence" hidden><form id="photo-form"><label class="field">Choose an image<input name="photo" type="file" accept="image/*" required></label><div class="modal-actions"><button class="outline-button" type="button" data-close-dialog>Close</button><button class="primary-button" type="submit">Save photo</button></div></form></dialog>
