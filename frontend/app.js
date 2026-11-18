@@ -223,11 +223,21 @@ function toDateInput(value) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 function applyFilter(group) {
+  if (!group) return;
   const selected = group.querySelector('.filter.active');
   if (!selected) return;
   const isCash = group.dataset.filterGroup === 'cash';
   const search = isCash ? document.querySelector('#cash-search').value.trim().toLowerCase() : '';
   const rows = document.querySelectorAll(`#${group.dataset.filterGroup}-rows tr`);
+
+  // "Late 2" -> "Late (2)" (only on buttons that already show a number)
+  group.querySelectorAll('.filter').forEach(btn => {
+    const text = btn.textContent.trim();
+    if (!/\d+\)?$/.test(text)) return;
+    const count = [...rows].filter(row => row.dataset.status && (btn.dataset.filter === 'all' || row.dataset.status === btn.dataset.filter)).length;
+    btn.textContent = `${text.replace(/\s*\(?\d+\)?$/, '')} (${count})`;
+  });
+
   rows.forEach(row => {
     const matchesStatus = selected.dataset.filter === 'all' || row.dataset.status === selected.dataset.filter;
     const matchesSearch = !search || (row.dataset.search || '').includes(search);
@@ -243,6 +253,7 @@ function renderAttendance() {
       : '--';
     return `<tr data-status="${status}"><td>${name}</td><td>${time}</td><td>--</td><td>--</td><td><span class="badge badge-${badgeClass[status]}">${status}</span></td><td>${photoCell}</td></tr>`;
   }).join('');
+    applyFilter(document.querySelector('[data-filter-group="attendance"]'));
 }
 function renderStaff() {
   document.querySelector('#staff-rows').innerHTML = apiStaff.length
@@ -1005,3 +1016,11 @@ document.querySelector('#print-payslip').addEventListener('click', () => {
   window.print();
 });
 window.addEventListener('afterprint', () => document.body.classList.remove('print-payslip'));
+function showToday() {
+  const now = new Date();
+  const date = now.toLocaleDateString('en-PH', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+  const time = now.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit', second: '2-digit' });
+  document.querySelector('#today').textContent = `${date} · ${time}`;
+}
+showToday();
+setInterval(showToday, 1000);
