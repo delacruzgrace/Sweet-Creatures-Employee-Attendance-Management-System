@@ -1,5 +1,10 @@
 const STORAGE_KEY = 'sweet-creatures-attendance-data-v1';
-const API_BASE_URL = '/api';
+const LOCAL_API_PORT = '5000';
+const isLocalPreview = ['localhost', '127.0.0.1'].includes(window.location.hostname)
+  && window.location.port !== LOCAL_API_PORT;
+const API_BASE_URL = isLocalPreview
+  ? `http://${window.location.hostname}:${LOCAL_API_PORT}/api`
+  : '/api';
 const TOKEN_KEY = 'sweet-creatures-session-token';
 let apiStaff = [];
 
