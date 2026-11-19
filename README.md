@@ -9,3 +9,7 @@
 5. Start the app with `npm start` and open `http://localhost:5000`.
 
 The login and Staff page use the backend. Attendance, payroll, cash advances, policies, and SOP are still prototype-only and use browser data.
+
+In Explorer, open backend\src\server.js.
+Choose Run → Start Debugging (or press F5). If prompted, select Node.js.
+Leave it running, then open http://localhost:5000. Stopping the debugger will stop the app.
