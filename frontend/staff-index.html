@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#4f5b2e">
+  <title>Sweet Creatures | Staff</title>
+  <link rel="manifest" href="assets/staff-manifest.webmanifest">
+  <link rel="icon" href="assets/staff-icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/staff-icon.svg">
+  <link rel="stylesheet" href="staff-style.css">
+</head>
+<body>
+
+  <div class="app" id="app" hidden>
+    <header class="topbar">
+      <h1 id="title">Hello</h1>
+      <button class="link-btn" data-act="signout">Sign out</button>
+    </header>
+
+    <main class="views">
+      <section class="view" id="view-home"></section>
+      <section class="view" id="view-log" hidden></section>
+      <section class="view" id="view-pay" hidden></section>
+      <section class="view" id="view-cash" hidden></section>
+      <section class="view" id="view-sop" hidden></section>
+      <section class="view" id="view-sync" hidden></section>
+    </main>
+
+    <nav class="tabs" aria-label="Main">
+      <button class="tab" data-tab="home">Home</button>
+      <button class="tab" data-tab="log">Log</button>
+      <button class="tab" data-tab="pay">Payslips</button>
+      <button class="tab" data-tab="cash">Advances</button>
+      <button class="tab" data-tab="sop">SOP</button>
+      <button class="tab" data-tab="sync">Sync<span class="badge" id="sync-badge" hidden>0</span></button>
+    </nav>
+  </div>
+
+  <!-- ===== Photo capture sheet (Time In / Time Out, FR-03) ===== -->
+  <section class="photo-sheet" id="photo" hidden aria-label="Confirm photo">
+    <header class="topbar">
+      <h1>Confirm photo</h1>
+      <button class="link-btn" id="photo-cancel" type="button">Cancel</button>
+    </header>
+    <div class="photo-stage">
+      <video id="cam" playsinline muted autoplay></video>
+      <img id="shot" alt="Captured photo preview" hidden>
+      <p class="cam-msg" id="cam-msg" hidden></p>
+    </div>
+    <p class="photo-title" id="photo-title"></p>
+    <div class="photo-actions" id="photo-actions"></div>
+    <!-- fallback when the browser blocks the live camera -->
+    <input id="file" type="file" accept="image/*" capture="user" hidden>
+  </section>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="staff-api.js"></script>
+  <script src="staff-app.js"></script>
+</body>
+</html>

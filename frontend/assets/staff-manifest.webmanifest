@@ -1,0 +1,14 @@
+{
+  "name": "Sweet Creatures Staff",
+  "short_name": "SC Staff",
+  "description": "Staff attendance for Sweet Creatures",
+  "start_url": "../staff-index.html",
+  "scope": "../",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#efe6d2",
+  "theme_color": "#4f5b2e",
+  "icon": [
+    { "src": "staff-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
