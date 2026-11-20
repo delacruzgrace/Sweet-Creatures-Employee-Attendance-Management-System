@@ -6,6 +6,8 @@ const API_BASE_URL = isLocalPreview
   ? `http://${window.location.hostname}:${LOCAL_API_PORT}/api`
   : '/api';
 const TOKEN_KEY = 'sweet-creatures-session-token';
+const STAFF_SESSION_KEY = 'sc_staff_session';
+const STAFF_HOME = 'staff-index.html';
 let apiStaff = [];
 
 const attendance = [
@@ -630,6 +632,18 @@ document.querySelector('#login-form').addEventListener('submit', async event => 
     if (typeof result.token !== 'string' || !result.token) {
       throw new Error('The backend did not return a session token.');
     }
+    // One login for everyone: the server says who this is, the page decides where to go.
+    if (result.user?.role === 'Staff') {
+      const u = result.user;
+      localStorage.setItem(STAFF_SESSION_KEY, JSON.stringify({
+        token: result.token,
+        user: { id: String(u.id), username: u.username, role: 'staff', name: [u.firstName, u.lastName].filter(Boolean).join(' ') || u.username },
+        exp: Date.now() + 12 * 3600e3
+      }));
+      window.location.assign(STAFF_HOME);
+      return;
+    }
+    if (result.user?.role !== 'Admin') throw new Error('This account type cannot log in here.');
     sessionStorage.setItem(TOKEN_KEY, result.token);
     await loadEmployees();
     document.querySelector('#login').hidden = true;
@@ -829,7 +843,8 @@ async function restoreSession() {
   if (!sessionStorage.getItem(TOKEN_KEY)) return;
   const loginError = document.querySelector('#login-error');
   try {
-    await apiRequest('/auth/me');
+    const me = await apiRequest('/auth/me');
+    if (me.account_role !== 'Admin') throw new Error('This session is not an admin session.');
     await loadEmployees();
     document.querySelector('#login').hidden = true;
     document.querySelector('#app').hidden = false;
@@ -840,6 +855,14 @@ async function restoreSession() {
   }
 }
 restoreSession();
+try {
+  const notice = sessionStorage.getItem('sc_login_notice');
+  if (notice) {
+    sessionStorage.removeItem('sc_login_notice');
+    const box = document.querySelector('#login-error');
+    box.textContent = notice; box.hidden = false;
+  }
+} catch { /* storage unavailable */ }
 
 document.querySelector('#photo-form').addEventListener('submit', async event => {
   event.preventDefault();

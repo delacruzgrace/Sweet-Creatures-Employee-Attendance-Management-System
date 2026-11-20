@@ -13,3 +13,9 @@ The login and Staff page use the backend. Attendance, payroll, cash advances, po
 In Explorer, open backend\src\server.js.
 Choose Run → Start Debugging (or press F5). If prompted, select Node.js.
 Leave it running, then open http://localhost:5000. Stopping the debugger will stop the app.
+
+## Test Account
+Admin:	Default development account: username: lysa, PIN:  12345
+Staff: username: trish, PIN: 1102
+To create new staff, the admin creates it in Staff Management > + Add Staff (role Staff, PIN 4 to 6 digits)	
+
